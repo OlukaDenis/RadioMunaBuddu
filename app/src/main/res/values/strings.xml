@@ -1,11 +1,15 @@
 <resources>
     <string name="app_name">Radio MunaBuddu</string>
-    <string name="playing_song_title">Freaky Friday</string>
-    <string name="playing_song_artist">Chris Brow ft Lil Dicky</string>
 
     <string name="now_playing">Now playing</string>
     <string name="play_time">3:40</string>
     <string name="played_time">0:40</string>
 
     <string name="playing_alt_pic">Playing song cover</string>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Radio Muna Buddu</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
 </resources>
