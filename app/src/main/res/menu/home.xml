@@ -6,4 +6,17 @@
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/watch_webcam"
+        android:icon="@drawable/ic_videocam_black_24dp"
+        android:title="@string/webcam_text"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/twitter_share"
+        android:title="@string/twitter_share"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/playstore_share"
+        android:title="@string/appstore_rate"
+        app:showAsAction="never" />
 </menu>

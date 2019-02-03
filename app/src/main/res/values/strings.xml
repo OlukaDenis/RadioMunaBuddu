@@ -1,15 +1,17 @@
 <resources>
-    <string name="app_name">Radio MunaBuddu</string>
+    <string name="app_name">Radio Munnabuddu</string>
 
-    <string name="now_playing">Now playing</string>
-    <string name="play_time">3:40</string>
-    <string name="played_time">0:40</string>
-
-    <string name="playing_alt_pic">Playing song cover</string>
     <string name="title_activity_home">HomeActivity</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Radio Muna Buddu</string>
+    <string name="nav_header_title">Radio Munnabuddu</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
+
+    <string name="webcam_text">Watch Live Webcam</string>
+    <string name="twitter_share">Share on Twitter</string>
+    <string name="appstore_rate">Rate our app</string>
+    <string name="buddu_bio">We are an infotainment outfit at Radio MunnabudduUsa.com based in USA.
+        At RMU our focus and target audience is all the descendants of Uganda our motherland, broadcasting them all over the world via the internet through the various available platforms especially facebook, You Tube Twitter name it…
+        Our motto “ A home away from home” is our driving force aiming at keeping our listeners in touch with our country of descent Uganda.</string>
 </resources>
