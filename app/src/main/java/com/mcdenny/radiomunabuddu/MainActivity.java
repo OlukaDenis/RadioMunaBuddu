@@ -113,17 +113,16 @@ public class MainActivity extends AppCompatActivity {
         EmailPress.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view){
 
-                Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                emailIntent.setType("message/rfc822");
-                emailIntent.putExtra(Intent.EXTRA_EMAIL  , new String[]{EMAILADD});
+                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                emailIntent.setData(Uri.parse("mailto: "+settings.getEmailAddress()));
                 emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio Munnabuddu");
-                //i.putExtra(Intent.EXTRA_TEXT   , "body of email");
-                try {
-                    startActivity(Intent.createChooser(emailIntent, "Send email..."));
-                } catch (android.content.ActivityNotFoundException ex) {
-                    Toast.makeText(MainActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
+                if (emailIntent.resolveActivity(getPackageManager()) != null){
+                    try {
+                        startActivity(Intent.createChooser(emailIntent, "Send email..."));
+                    } catch (android.content.ActivityNotFoundException ex) {
+                        Toast.makeText(MainActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
+                    }
                 }
-
             }
         });
 

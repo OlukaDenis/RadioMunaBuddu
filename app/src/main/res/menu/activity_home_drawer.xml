@@ -8,10 +8,7 @@
             android:id="@+id/nav_home"
             android:icon="@drawable/ic_home_black_24dp"
             android:title="Home" />
-        <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_settings_black_24dp"
-            android:title="Settings" />
+
         <item
             android:id="@+id/nav_share"
             android:icon="@drawable/ic_menu_share"
@@ -30,17 +27,33 @@
             android:title="Check for updates" />
     </group>
 
-    <item android:title="Developer">
+    <item android:title="Social">
         <menu>
             <item
-                android:id="@+id/nav_dev_email"
-                android:icon="@drawable/ic_developer_mode_black_24dp"
-                android:title="Contact developer" />
+                android:id="@+id/nav_fb"
+                android:icon="@drawable/facebook_24px_1"
+                android:title="Like us on Facebook" />
+
+            <item
+                android:id="@+id/nav_twitter"
+                android:icon="@drawable/twitter_24px"
+                android:title="Follow us on Twiter" />
+
+            <item
+                android:id="@+id/nav_insta"
+                android:icon="@drawable/instagram_24px"
+                android:title="Follow us on Instagram" />
+        </menu>
+    </item>
+
+    <item android:title="Bugs">
+        <menu>
             <item
                 android:id="@+id/nav_report"
                 android:icon="@drawable/ic_report_problem_black_24dp"
                 android:title="Report a problem" />
         </menu>
     </item>
+
 
 </menu>

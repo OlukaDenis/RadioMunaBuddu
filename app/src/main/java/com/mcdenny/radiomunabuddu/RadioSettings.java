@@ -11,13 +11,16 @@ public class RadioSettings {
     private String radioStreamURL = "https://munnabudduusa19.radioca.st/stream";
 
     //URL of webcam (or YouTube link maybe)
-    private String radioWebcamURL = "http://youtube.com/";
+    private String radioWebcamURL = "http://youtube.com/channel/UCJEqaSGJWfXPRLMGIHerK7Q";
 
     //URL for the advertising / message banner. For no banner leave blank, i.e: ""
     //private String adBannerURL = "http://www.aironair.co.uk/wp-content/uploads/2013/09/App-Banner.png";
 
     //Contact button email address
     private String emailAddress = "radiomunnabudduusa@gmail.com";
+
+    //Facebook profile page link
+    private String facebookAddress = "https://m.facebook.com/radiomunnabudduusa";
 
     //Contact button phone number
     private String phoneNumber = "+18184918052";
@@ -63,6 +66,10 @@ public class RadioSettings {
 
     public String getEmailAddress(){
         return emailAddress;
+    }
+
+    public String getFacebookAddress(){
+        return facebookAddress;
     }
 
     public String getPhoneNumber(){

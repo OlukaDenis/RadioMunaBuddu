@@ -6,21 +6,35 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.AudioManager;
+import android.media.MediaMetadata;
 import android.media.MediaPlayer;
+import android.media.session.MediaSession;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
 
-public class RadioMediaPlayerService extends Service {
+public class RadioMediaPlayerService extends Service implements
+        AudioManager.OnAudioFocusChangeListener {
     //Variables
     private boolean isPlaying = false;
     private MediaPlayer radioPlayer; //The media player instance
     private static int classID = 579; // just a number
     public static String START_PLAY = "START_PLAY";
+    AudioManager audioManager;
+    //Media session
+    MediaSession mSession;
 
     //Settings
     RadioSettings settings = new RadioSettings();
@@ -40,9 +54,20 @@ public class RadioMediaPlayerService extends Service {
         if (intent.getBooleanExtra(START_PLAY, false)) {
             play();
         }
+        //Request audio focus
+        if (!requestAudioFocus()) {
+            //Could not gain focus
+            stopSelf();
+        }
+        initMediaSession();
         return Service.START_STICKY;
     }
 
+    @Override
+    public void onCreate() {
+
+        super.onCreate();
+    }
 
     /**
      * Starts radio URL stream
@@ -61,14 +86,25 @@ public class RadioMediaPlayerService extends Service {
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|
                         Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-                PendingIntent pi = PendingIntent.getActivity(this, 0, intent, 0);
+                PendingIntent pi = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+//                mSession.setSessionActivity(pi);
 
                 //Build and show notification for radio playing
-                Notification notification = new Notification.Builder(getApplicationContext())
+                Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
+                        R.drawable.buddu3);
+                Notification notification = new NotificationCompat.Builder(this, "ID")
+                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                         .setContentTitle(settings.getRadioName())
                         .setContentText(settings.getMainNotificationMessage())
-                        .setSmallIcon(R.drawable.buddu3)
+                        .setSmallIcon(R.drawable.ic_radio_black_24dp)
+                        //.addAction(R.drawable.ic_play_arrow_white_64dp, "Play", pi)
+                        .addAction(R.drawable.ic_pause_black_24dp, "Pause", pi)
+                        .setLargeIcon(largeIcon)
                         .setContentIntent(pi)
+                        .setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle()
+                                .setShowActionsInCompactView(0))
+                        //.setMediaSession(MediaSessionCompat.Token.fromToken(mSession.getSessionToken()))
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                         .build();
 
                 //Get stream URL
@@ -123,8 +159,8 @@ public class RadioMediaPlayerService extends Service {
     @Override
     public void onDestroy() {
         stop();
+        removeAudioFocus();
     }
-
 
     /**
      * Stops audio from the active service
@@ -139,7 +175,7 @@ public class RadioMediaPlayerService extends Service {
             stopForeground(true);
         }
 
-        Toast.makeText(getApplicationContext(), "Stream stopped",
+        Toast.makeText(getApplicationContext(), "Radio stopped",
                 Toast.LENGTH_LONG).show();
     }
 
@@ -157,5 +193,93 @@ public class RadioMediaPlayerService extends Service {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+
+        //Invoked when the audio focus of the system is updated.
+        switch (focusChange) {
+            case AudioManager.AUDIOFOCUS_GAIN:
+                // resume playback
+               // if (radioPlayer == null) initMediaPlayer();
+                if (!radioPlayer.isPlaying()) radioPlayer.start();
+
+                radioPlayer.setVolume(1.0f, 1.0f);
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS:
+                // Lost focus for an unbounded amount of time: stop playback and release media player
+                if (radioPlayer.isPlaying()) radioPlayer.stop();
+                radioPlayer.release();
+                //radioPlayer = null;
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                // Lost focus for a short time, but we have to stop
+                // playback. We don't release the media player because playback
+                // is likely to resume
+                if (radioPlayer.isPlaying()) radioPlayer.pause();
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                // Lost focus for a short time, but it's ok to keep playing
+                // at an attenuated level
+                if (radioPlayer.isPlaying()) radioPlayer.setVolume(0.1f, 0.1f);
+                break;
+        }
+    }
+
+    /**
+     * AudioFocus
+     */
+    private boolean requestAudioFocus() {
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            //Focus gained
+            return true;
+        }
+        //Could not gain focus
+        return false;
+    }
+
+    private boolean removeAudioFocus() {
+        return AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
+                audioManager.abandonAudioFocus(this);
+    }
+
+    /**
+     * MediaSession and Notification actions
+     */
+    private void initMediaSession(){
+        mSession = new MediaSession(this, "RadioMediaPlayerService");
+        mSession.setActive(true);
+        mSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        updateMetaData();
+        mSession.setCallback(new MediaSession.Callback() {
+
+            @Override
+            public void onPlay() {
+                play();
+                super.onPlay();
+            }
+
+            @Override
+            public void onStop() {
+                stop();
+                super.onStop();
+            }
+        });
+
+    }
+    private void updateMetaData() {
+        Bitmap albumArt = BitmapFactory.decodeResource(getResources(),
+                R.drawable.buddu3);
+        Bitmap dispIcon = BitmapFactory.decodeResource(getResources(),
+                R.drawable.ic_radio_black_24dp);//replace with medias albumArt
+        // Update the current metadata
+        mSession.setMetadata(new MediaMetadata.Builder()
+                .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, albumArt)
+                .putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, dispIcon)
+                .putString(MediaMetadata.METADATA_KEY_TITLE, "Radio Munnabuddu USA")
+                .build());
     }
 }

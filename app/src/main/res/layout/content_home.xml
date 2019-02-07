@@ -49,7 +49,7 @@
             </LinearLayout>
         </android.support.v7.widget.CardView>
 
-        <android.support.v7.widget.CardView
+        <!--<android.support.v7.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/padding_xsmaller"
@@ -106,7 +106,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-        </android.support.v7.widget.CardView>
+        </android.support.v7.widget.CardView> -->
 
         <mehdi.sakout.fancybuttons.FancyButton
             android:id="@+id/listen_radio"
