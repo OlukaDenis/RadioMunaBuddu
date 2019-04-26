@@ -29,7 +29,7 @@ public class RadioSettings {
     private String websiteURL = "http://radiomunnabudduusa.com";
 
     //Contact button SMS number
-    private String smsNumber = "0703269426";
+    private String smsNumber = "+18184918052";
 
     //Message to be shown in notification center whilst playing
     private String mainNotificationMessage = "You're listening to RadioMunnabudduUsa.Com";

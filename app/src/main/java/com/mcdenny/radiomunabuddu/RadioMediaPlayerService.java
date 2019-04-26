@@ -14,10 +14,12 @@ import android.media.MediaPlayer;
 import android.media.session.MediaSession;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.util.Log;
@@ -49,6 +51,7 @@ public class RadioMediaPlayerService extends Service implements
     /**
      * Starts the streaming service
      */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.getBooleanExtra(START_PLAY, false)) {
@@ -98,7 +101,7 @@ public class RadioMediaPlayerService extends Service implements
                         .setContentText(settings.getMainNotificationMessage())
                         .setSmallIcon(R.drawable.ic_radio_black_24dp)
                         //.addAction(R.drawable.ic_play_arrow_white_64dp, "Play", pi)
-                        .addAction(R.drawable.ic_pause_black_24dp, "Pause", pi)
+                        //.addAction(R.drawable.ic_pause_black_24dp, "Pause", pi)
                         .setLargeIcon(largeIcon)
                         .setContentIntent(pi)
                         .setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle()
@@ -202,8 +205,10 @@ public class RadioMediaPlayerService extends Service implements
         switch (focusChange) {
             case AudioManager.AUDIOFOCUS_GAIN:
                 // resume playback
-               // if (radioPlayer == null) initMediaPlayer();
-                if (!radioPlayer.isPlaying()) radioPlayer.start();
+               //if (radioPlayer == null) initMediaPlayer();
+                if (!radioPlayer.isPlaying()) {
+                    radioPlayer.release();
+                }
 
                 radioPlayer.setVolume(1.0f, 1.0f);
                 break;
@@ -249,6 +254,7 @@ public class RadioMediaPlayerService extends Service implements
     /**
      * MediaSession and Notification actions
      */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void initMediaSession(){
         mSession = new MediaSession(this, "RadioMediaPlayerService");
         mSession.setActive(true);
@@ -270,6 +276,7 @@ public class RadioMediaPlayerService extends Service implements
         });
 
     }
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void updateMetaData() {
         Bitmap albumArt = BitmapFactory.decodeResource(getResources(),
                 R.drawable.buddu3);
