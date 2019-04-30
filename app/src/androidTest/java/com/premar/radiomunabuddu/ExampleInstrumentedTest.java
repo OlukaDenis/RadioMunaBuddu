@@ -1,4 +1,4 @@
-package com.mcdenny.radiomunabuddu;
+package com.premar.radiomunabuddu;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

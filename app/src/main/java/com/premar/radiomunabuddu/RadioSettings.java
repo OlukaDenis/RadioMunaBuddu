@@ -1,4 +1,4 @@
-package com.mcdenny.radiomunabuddu;
+package com.premar.radiomunabuddu;
 
 public class RadioSettings {
     /********ALL EDITABLE SETTINGS ARE HERE *****/

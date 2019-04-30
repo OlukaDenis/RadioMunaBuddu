@@ -1,4 +1,4 @@
-package com.mcdenny.radiomunabuddu;
+package com.premar.radiomunabuddu;
 
 import org.junit.Test;
 
