@@ -20,6 +20,8 @@ import androidx.core.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
+
 import java.io.IOException;
 
 import static com.premar.radiomunabuddu.AppUtils.RMB_CHANNEL_ID;
@@ -37,6 +39,7 @@ public class RadioMediaPlayerService extends Service implements
     private NotificationCompat.Builder builder;
     //Media session
     MediaSession mSession;
+    // Set a key to a string.
 
     //Settings
     RadioSettings settings = new RadioSettings();
@@ -96,7 +99,8 @@ public class RadioMediaPlayerService extends Service implements
                 builder = getNotificationBuilder(getApplicationContext());
                 builder.setContentIntent(workerPendingIntent);
 
-                notificationManager.notify(RMB_NOTIFICATION_ID, builder.build());
+                Notification notification = builder.build();
+                notificationManager.notify(RMB_NOTIFICATION_ID, notification);
 
 
                 //Get stream URL
@@ -121,7 +125,6 @@ public class RadioMediaPlayerService extends Service implements
                     radioPlayer.start(); //Start radio stream
                 });
 
-                Notification notification = builder.build();
                 startForeground(classID, notification);
 
                 //Display toast notification
@@ -245,6 +248,7 @@ public class RadioMediaPlayerService extends Service implements
                 .setContentTitle("Radio MB FM")
                 .setContentText("You're listening to Radio MB FM")
                 .setAutoCancel(true)
+                .setSound(null)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setPriority(NotificationCompat.PRIORITY_MAX);
