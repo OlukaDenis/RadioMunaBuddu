@@ -1,23 +1,29 @@
 package com.premar.radiomunabuddu;
-import android.annotation.SuppressLint;
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.session.MediaSession;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
+import androidx.core.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
+
+import static com.premar.radiomunabuddu.AppUtils.RMB_CHANNEL_ID;
+import static com.premar.radiomunabuddu.AppUtils.RMB_NOTIFICATION_ID;
 
 public class RadioMediaPlayerService extends Service implements
         AudioManager.OnAudioFocusChangeListener {
@@ -27,6 +33,8 @@ public class RadioMediaPlayerService extends Service implements
     private static int classID = 579; // just a number
     public static String START_PLAY = "START_PLAY";
     AudioManager audioManager;
+    private NotificationManager notificationManager;
+    private NotificationCompat.Builder builder;
     //Media session
     MediaSession mSession;
 
@@ -58,8 +66,9 @@ public class RadioMediaPlayerService extends Service implements
 
     @Override
     public void onCreate() {
-
         super.onCreate();
+        notificationManager = (NotificationManager)
+                getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     /**
@@ -68,33 +77,27 @@ public class RadioMediaPlayerService extends Service implements
     private void play() {
 
         //Check connectivity status
-        if (isOnline()) {
+        if (AppUtils.isNetworkAvailable(this)) {
             //Check if player already streaming
             if (!isPlaying) {
                 isPlaying = true;
 
-                //Return to the current activity
-                Intent intent = new Intent(this, HomeActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|
-                        Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-                PendingIntent pi = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-//                mSession.setSessionActivity(pi);
+                //create the notification channel for the app
+                createWorkerNotificationChannel(notificationManager);
 
-                //Build and show notification for radio playing
-                Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
-                        R.drawable.buddu3);
-                Notification notification = new NotificationCompat.Builder(this, "ID")
-                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                        .setTicker("Radio Munnabuddu USA")
-                        .setContentTitle(settings.getRadioName())
-                        .setContentText(settings.getMainNotificationMessage())
-                        .setSmallIcon(R.drawable.ic_radio_black_24dp)
-                        //.addAction(R.drawable.ic_play_arrow_white_64dp, "Play", pi)
-                       // .addAction(R.drawable.ic_pause_black_24dp, "Pause", pi)
-                        .setLargeIcon(largeIcon)
-                        .setContentIntent(pi)
-                        .build();
+                Intent radioIntent = new Intent(getApplicationContext(), HomeActivity.class);
+                radioIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                PendingIntent workerPendingIntent = PendingIntent.getActivity(getApplicationContext(),
+                        RMB_NOTIFICATION_ID,
+                        radioIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+
+                builder = getNotificationBuilder(getApplicationContext());
+                builder.setContentIntent(workerPendingIntent);
+
+                notificationManager.notify(RMB_NOTIFICATION_ID, builder.build());
+
 
                 //Get stream URL
                 radioPlayer = new MediaPlayer();
@@ -110,21 +113,15 @@ public class RadioMediaPlayerService extends Service implements
 
                 if (settings.getAllowConsole()){
                     //Buffering Info
-                    radioPlayer.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
-                        public void onBufferingUpdate(MediaPlayer mp, int percent) {
-                            Log.i("Buffering", "" + percent);
-                        }
-                    });
+                    radioPlayer.setOnBufferingUpdateListener((mp, percent) -> Log.i("Buffering", "" + percent));
                 }
 
                 radioPlayer.prepareAsync();
-                radioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-
-                    public void onPrepared(MediaPlayer mp) {
-                        radioPlayer.start(); //Start radio stream
-                    }
+                radioPlayer.setOnPreparedListener(mp -> {
+                    radioPlayer.start(); //Start radio stream
                 });
 
+                Notification notification = builder.build();
                 startForeground(classID, notification);
 
                 //Display toast notification
@@ -168,21 +165,6 @@ public class RadioMediaPlayerService extends Service implements
                 Toast.LENGTH_LONG).show();
     }
 
-
-    /**
-     * Checks if there is a data or internet connection before starting the stream.
-     * Displays Toast warning if there is no connection
-     * @return online status boolean
-     */
-    public boolean isOnline() {
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
-            return true;
-        }
-        return false;
-    }
 
     @Override
     public void onAudioFocusChange(int focusChange) {
@@ -233,6 +215,39 @@ public class RadioMediaPlayerService extends Service implements
     private boolean removeAudioFocus() {
         return AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
                 audioManager.abandonAudioFocus(this);
+    }
+
+    private void createWorkerNotificationChannel(NotificationManager notificationManager){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            //Notification channel targeting Android 8 and above
+            NotificationChannel channel = new NotificationChannel(RMB_CHANNEL_ID,
+                    "Worker Notification",
+                    NotificationManager.IMPORTANCE_HIGH);
+            channel.enableLights(true);
+            channel.enableVibration(true);
+            channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+            channel.setLightColor(Color.BLACK);
+            channel.setDescription("Notification from Radio MB FM");
+
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+
+
+    private NotificationCompat.Builder getNotificationBuilder(Context context){
+        Bitmap largeIcon = BitmapFactory.decodeResource(context.getResources(),
+                R.drawable.rmb);
+
+        return new NotificationCompat.Builder(context, RMB_CHANNEL_ID)
+                .setLargeIcon(largeIcon)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle("Radio MB FM")
+                .setContentText("You're listening to Radio MB FM")
+                .setAutoCancel(true)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setPriority(NotificationCompat.PRIORITY_MAX);
     }
 
 
