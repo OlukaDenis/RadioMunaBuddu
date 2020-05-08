@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/watch_webcam"
-        android:icon="@drawable/ic_videocam_black_24dp"
+        android:icon="@drawable/ic_youtube"
         android:title="@string/webcam_text"
         app:showAsAction="ifRoom" />
 

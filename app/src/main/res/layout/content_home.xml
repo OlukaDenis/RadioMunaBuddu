@@ -41,28 +41,28 @@
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_margin="5dp"
-                    android:background="@drawable/website_icon" />
+                    android:background="@drawable/ic_globe" />
 
                 <Button
                     android:id="@+id/phoneBtn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_margin="5dp"
-                    android:background="@drawable/phone_icon" />
+                    android:background="@drawable/ic_phone" />
 
                 <Button
                     android:id="@+id/emailBtn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_margin="5dp"
-                    android:background="@drawable/email_icon" />
+                    android:background="@drawable/ic_mail" />
 
                 <Button
                     android:id="@+id/txtBtn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_margin="5dp"
-                    android:background="@drawable/sms_icon" />
+                    android:background="@drawable/ic_whatsapp" />
             </LinearLayout>
 
             <!-- Play / Stop Buttons -->
@@ -76,21 +76,11 @@
                 android:layout_marginBottom="16dp"
                 android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/PlayButton"
-                    android:layout_width="145dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|center"
-                    android:layout_marginBottom="5dp"
-                    android:background="@drawable/play_icon" />
-
-                <Button
-                    android:id="@+id/StopButton"
-                    android:layout_width="145dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|center"
-                    android:layout_marginBottom="5dp"
-                    android:background="@drawable/stop_icon" />
+                <ImageButton
+                    android:id="@+id/playPauseBtn"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:background="@drawable/ic_play" />
             </LinearLayout>
 
 
