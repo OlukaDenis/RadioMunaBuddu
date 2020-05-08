@@ -14,4 +14,6 @@
     <string name="buddu_bio">We are an infotainment outfit at Radio MunnabudduUsa.com based in USA.
         At RMU our focus and target audience is all the descendants of Uganda our motherland, broadcasting them all over the world via the internet through the various available platforms especially facebook, You Tube Twitter name it…
         Our motto “ A home away from home” is our driving force aiming at keeping our listeners in touch with our country of descent Uganda.</string>
+    <string name="live_broadcast">Start Radio MB Fm</string>
+    <string name="no_stream">Stream not available</string>
 </resources>
