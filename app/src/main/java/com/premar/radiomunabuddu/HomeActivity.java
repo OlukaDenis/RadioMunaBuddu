@@ -1,22 +1,29 @@
 package com.premar.radiomunabuddu;
 
 import android.Manifest;
-import android.content.ActivityNotFoundException;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.analytics.FirebaseAnalytics;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
+import android.provider.Telephony;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,10 +32,15 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import butterknife.BindView;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import mehdi.sakout.fancybuttons.FancyButton;
+
+import static com.premar.radiomunabuddu.AppUtils.ALL_PERMISSIONS;
 
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -36,11 +48,13 @@ public class HomeActivity extends AppCompatActivity
     ImageView facebook, twitter, instagram, linkedin;
     RadioSettings settings;
     Context context;
+    private static final String TAG = "HomeActivity";
     public static final int REQUEST_CODE =123;
 
     private Button stopButton = null;
     private Button playButton = null;
-    private Button phoneCall;
+    private Button phoneCall, EmailPress, WWWPress, TxtPress;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,8 +66,15 @@ public class HomeActivity extends AppCompatActivity
         ButterKnife.bind(this);
         settings = new RadioSettings();
 
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+
+        checkAndRequestPermissions();
+
         //views
-        phoneCall = (Button)this.findViewById(R.id.phoneBtn);
+        phoneCall = findViewById(R.id.phoneBtn);
+        WWWPress = findViewById(R.id.websiteBtn);
+        TxtPress = findViewById(R.id.txtBtn);
+        EmailPress = findViewById(R.id.emailBtn);
 
 
         //Allow hardware audio buttons to control volume
@@ -61,7 +82,7 @@ public class HomeActivity extends AppCompatActivity
 
         clickListeners(); //Start click listeners
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -185,14 +206,14 @@ public class HomeActivity extends AppCompatActivity
              String shareMessage= "\nPlease download our Radiomunnabuddu USA app from the Play Store\n\n";
              shareMessage = shareMessage + "https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID +"\n\n";
             shareIntent.putExtra(Intent.EXTRA_TEXT  , shareMessage);
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio Munnabuddu USA");
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio MB FM");
             startActivity(Intent.createChooser(shareIntent, "Share via..."));
 
         }
         else if (id == R.id.nav_email){
             Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
             emailIntent.setData(Uri.parse("mailto: "+settings.getEmailAddress()));
-            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio Munnabuddu USA");
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio MB FM");
             if (emailIntent.resolveActivity(getPackageManager()) != null){
                 startActivity(Intent.createChooser(emailIntent, "Send email via"));
             }
@@ -228,81 +249,55 @@ public class HomeActivity extends AppCompatActivity
      */
     private void clickListeners(){
         //Play button
-        playButton = (Button)findViewById(R.id.PlayButton);
-        playButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(),
-                        RadioMediaPlayerService.class);
-                intent.putExtra(RadioMediaPlayerService.START_PLAY, true);
-                startService(intent);
+        playButton = findViewById(R.id.PlayButton);
+        playButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getApplicationContext(),
+                    RadioMediaPlayerService.class);
+            intent.putExtra(RadioMediaPlayerService.START_PLAY, true);
+            startService(intent);
 
-            }
         });
 
         //Stop button
-        stopButton = (Button)findViewById(R.id.StopButton);
-        stopButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                //Get new MediaPlayerService activity
-                Intent intent = new Intent(getApplicationContext(),
-                        RadioMediaPlayerService.class);
-                stopService(intent);
-            }
+        stopButton = findViewById(R.id.StopButton);
+        stopButton.setOnClickListener(v -> {
+            //Get new MediaPlayerService activity
+            Intent intent = new Intent(getApplicationContext(),
+                    RadioMediaPlayerService.class);
+            stopService(intent);
         });
 
         //Email Button click list
-        final View EmailPress = (Button)this.findViewById(R.id.emailBtn);
-        EmailPress.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view){
 
-                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-                emailIntent.setData(Uri.parse("mailto: "+settings.getEmailAddress()));
-                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio Munnabuddu");
-                if (emailIntent.resolveActivity(getPackageManager()) != null){
-                    try {
-                        startActivity(Intent.createChooser(emailIntent, "Send email..."));
-                    } catch (android.content.ActivityNotFoundException ex) {
-                        Toast.makeText(HomeActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
-                    }
+        EmailPress.setOnClickListener(view -> {
+
+            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+            emailIntent.setData(Uri.parse("mailto: "+settings.getEmailAddress()));
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio MB FM");
+            if (emailIntent.resolveActivity(getPackageManager()) != null){
+                try {
+                    startActivity(Intent.createChooser(emailIntent, "Send email..."));
+                } catch (android.content.ActivityNotFoundException ex) {
+                    Toast.makeText(HomeActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
                 }
             }
         });
-
-
 
         //Website Button
-        final View WWWPress = (Button)this.findViewById(R.id.websiteBtn);
-        WWWPress.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view){
+        WWWPress.setOnClickListener(view -> {
 
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(settings.getWebsiteURL())); //URL
-                startActivity (browserIntent);
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(settings.getWebsiteURL())); //URL
+            startActivity (browserIntent);
 
-            }
         });
 
-        //SMS Button
-        final View TxtPress = (Button)this.findViewById(R.id.txtBtn);
-        TxtPress.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view){
-
-                Uri uri = Uri.parse(settings.getSmsNumber());
-                Intent intent = new Intent(Intent.ACTION_SENDTO, uri);
-                intent.putExtra("sms_body", "Hello Presenter,");
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
-                }
-                /*
-                if (ActivityCompat.checkSelfPermission(HomeActivity.this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED){
-                    Toast.makeText(HomeActivity.this, "Please grant the permission to call", Toast.LENGTH_SHORT).show();
-                    requestSMSPermission();
-                }
-                else {
-                    startActivity (smsIntent);
-                }*/
-
-            }
+        TxtPress.setOnClickListener(view -> {
+            sendSms();
         });
+
+        //Call phone
+        phoneCall.setOnClickListener(view -> onCall() );
+
     }
 
 
@@ -314,62 +309,136 @@ public class HomeActivity extends AppCompatActivity
         startActivity (browserIntent);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
 
-            case REQUEST_CODE:
-                if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    onCall();
-                } else {
-                    Log.d("TAG", "Call Permission Not Granted");
-                    //Toast.makeText(this, "Call Permission Not Granted", Toast.LENGTH_SHORT).show();
+    public void sendSms() {
+        if (checkAndRequestPermissions()) {
+            if (AppUtils.getDefaultSmsAppPackageName(this) != null) {
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) //At least KitKat
+                {
+                    String defaultSmsPackageName = Telephony.Sms.getDefaultSmsPackage(getApplicationContext()); //Need to change the build to API 19
+
+                    Intent sendIntent = new Intent(Intent.ACTION_SEND);
+                    sendIntent.setType("text/plain");
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, "Hello Presenter");
+
+                    if (defaultSmsPackageName != null)//Can be null in case that there is no default, then the user would be able to choose any app that support this intent.
+                    {
+                        sendIntent.setPackage(defaultSmsPackageName);
+                    }
+                    this.startActivity(sendIntent);
+
                 }
-                return;
-
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                else //For early versions, do what worked for you before.
+                {
+                    Intent sendIntent = new Intent(Intent.ACTION_VIEW);
+//                    sendIntent.setData(Uri.parse("sms_to:"+ settings.getSmsNumber()));
+                    sendIntent.setDataAndType(Uri.parse("sms_to:"+ settings.getSmsNumber()),
+                            "vnd.android-dir/mms-sms");
+                    sendIntent.putExtra("sms_body", "Hello Presenter");
+                    this.startActivity(sendIntent);
+                }
+            }
         }
     }
 
     public void onCall() {
-        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE);
-
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.CALL_PHONE},
-                    REQUEST_CODE);
-        } else {
-            phoneCall.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View view){
-                    /*
-                    String phoneNum = settings.getPhoneNumber();
-                    Intent phoneIntent = new Intent(Intent.ACTION_CALL);
-                    phoneIntent.setData(Uri.parse("tel:"+ phoneNum));
-                    if (phoneIntent.resolveActivity(getPackageManager()) != null) {
-                        startActivity(phoneIntent);
-                    }
-                    */
-                    startActivity(new Intent(Intent.ACTION_CALL).setData(Uri.parse("tel:" + settings.getPhoneNumber())));
-                }
-            });
-            //TODO: put an cation here
+        if (checkAndRequestPermissions()) {
+            startActivity(new Intent(Intent.ACTION_CALL).setData(Uri.parse("tel:" + settings.getPhoneNumber())));
         }
     }
 
-    private void requestCallPermission(){
-        ActivityCompat.requestPermissions(this, new String[]{
-                Manifest.permission.CALL_PHONE
-        }, 1);
+
+
+    private  boolean checkAndRequestPermissions() {
+        int permissionSms = ContextCompat.checkSelfPermission(this,Manifest.permission.SEND_SMS);
+        int permissionCall = ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE);
+
+
+        List<String> listPermissionsNeeded = new ArrayList<>();
+
+        if (permissionSms != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.SEND_SMS);
+        }
+        if (permissionCall != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.CALL_PHONE);
+        }
+        if (!listPermissionsNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]), ALL_PERMISSIONS);
+            return false;
+        }
+        return true;
     }
 
-    private void requestSMSPermission(){
-        ActivityCompat.requestPermissions(this, new String[]{
-                Manifest.permission.SEND_SMS
-        }, 1);
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        Log.d(TAG, "Permission callback called-------");
+        if (requestCode == ALL_PERMISSIONS) {
+            Map<String, Integer> perms = new HashMap<>();
+            // Initialize the map with both permissions
+            perms.put(Manifest.permission.CALL_PHONE, PackageManager.PERMISSION_GRANTED);
+            perms.put(Manifest.permission.SEND_SMS, PackageManager.PERMISSION_GRANTED);
+
+            // Fill with actual results from user
+            if (grantResults.length > 0) {
+                for (int i = 0; i < permissions.length; i++)
+                    perms.put(permissions[i], grantResults[i]);
+                // Check for both permissions
+                if (perms.get(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
+                        && perms.get(Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED ){
+                    Log.d(TAG, "Call & SMS services permission granted");
+                    // process the normal flow
+
+                    //else any one or both the permissions are not granted
+                } else {
+                    Log.d(TAG, "Some permissions are not granted ask again ");
+                    //permission is denied (this is the first time, when "never ask again" is not checked) so ask again explaining the usage of permission
+//                        // shouldShowRequestPermissionRationale will return true
+                    //show the dialog or snackbar saying its necessary and try again otherwise proceed with setup.
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.SEND_SMS)
+                            || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CALL_PHONE)) {
+                        showDialogOK("Service Permissions are required for this app",
+                                (dialog, which) -> {
+                                    switch (which) {
+                                        case DialogInterface.BUTTON_POSITIVE:
+                                            checkAndRequestPermissions();
+                                            break;
+                                        case DialogInterface.BUTTON_NEGATIVE:
+                                            // proceed with logic by disabling the related features or quit the app.
+                                            finish();
+                                            break;
+                                    }
+                                });
+                    }
+                    //permission is denied (and never ask again is  checked)
+                    //shouldShowRequestPermissionRationale will return false
+                    else {
+                        explain("You need to give some mandatory permissions to continue. Do you want to go to app settings?");
+                        //proceed with logic by disabling the related features or quit the app.
+                    }
+                }
+            }
+        }
+
     }
 
-
-
+    private void showDialogOK(String message, DialogInterface.OnClickListener okListener) {
+        new AlertDialog.Builder(this)
+                .setMessage(message)
+                .setPositiveButton("OK", okListener)
+                .setNegativeButton("Cancel", okListener)
+                .create()
+                .show();
+    }
+    private void explain(String msg){
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setMessage(msg)
+                .setPositiveButton("Yes", (paramDialogInterface, paramInt) -> {
+                    //  permissionsclass.requestPermission(type,code);
+                    startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.parse("package:com.app.ugaid")));
+                })
+                .setNegativeButton("Cancel", (paramDialogInterface, paramInt) -> finish());
+        dialog.show();
+    }
 }

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "392111836447",
+    "firebase_url": "https://radiomunabuddu.firebaseio.com",
+    "project_id": "radiomunabuddu",
+    "storage_bucket": "radiomunabuddu.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:392111836447:android:0596cb81a015caeea1342a",
+        "android_client_info": {
+          "package_name": "com.premar.radiomunabuddu"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "392111836447-1fes5jbaa7l7abgdprhr5uujv44655bt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.premar.radiomunabuddu",
+            "certificate_hash": "05108368d28ee56cd45242e04e2e60a511653323"
+          }
+        },
+        {
+          "client_id": "392111836447-34jvf72j3362jn8t5fbveqg2mvu7mqqb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDH3OM8q8Hieeg1OYCyCqswMlrTJLfZSzs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "392111836447-34jvf72j3362jn8t5fbveqg2mvu7mqqb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

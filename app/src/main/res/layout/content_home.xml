@@ -23,7 +23,7 @@
                     android:layout_marginTop="32dp"
                     android:layout_width="250dp"
                     android:layout_height="250dp"
-                    android:background="@drawable/buddu3" />
+                    android:background="@drawable/rmb" />
             </LinearLayout>
 
             <!-- Middle Buttons / Social buttons -->

@@ -4,7 +4,7 @@ public class RadioSettings {
     /********ALL EDITABLE SETTINGS ARE HERE *****/
 
     //Name of radio station
-    private final String radioName = "Radio Munnabuddu USA";
+    private final String radioName = "Radio MB FM";
 
     //URL of the radio stream
     //private String radioStreamURL = "http://markswist.com/markpersonal/B.O.B.-The_Adventures_Of_Bobby_Ray/04-b.o.b.-airplanes_(ft._hayley_williams_of_paramore).mp3";
