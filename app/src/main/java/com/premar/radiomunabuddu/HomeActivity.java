@@ -14,6 +14,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.premar.radiomunabuddu.exo_player.AppCons;
+import com.premar.radiomunabuddu.exo_player.RadioManager;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -24,51 +26,61 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.provider.Telephony;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import mehdi.sakout.fancybuttons.FancyButton;
 
 import static com.premar.radiomunabuddu.AppUtils.ALL_PERMISSIONS;
 
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-    FancyButton listenRadio;
-    ImageView facebook, twitter, instagram, linkedin;
-    RadioSettings settings;
-    Context context;
-    private static final String TAG = "HomeActivity";
-    public static final int REQUEST_CODE =123;
 
-    private Button stopButton = null;
-    private Button playButton = null;
+    private static final String TAG = "HomeActivity";
+
+    @BindView(R.id.playPauseBtn)
+    ImageButton playPauseBtn;
+
     private Button phoneCall, EmailPress, WWWPress, TxtPress;
     private FirebaseAnalytics mFirebaseAnalytics;
+    RadioManager radioManager;
 
+    private String streamURL;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         ButterKnife.bind(this);
-        settings = new RadioSettings();
+
+        streamURL = AppCons.radioStreamURL;
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         checkAndRequestPermissions();
+        AppUtils.isNetworkAvailable(this);
+
+        radioManager = RadioManager.with(this);
 
         //views
         phoneCall = findViewById(R.id.phoneBtn);
@@ -93,55 +105,6 @@ public class HomeActivity extends AppCompatActivity
 
     }
 
-    private void openFacebookProfile() {
-        try {
-            String facebookURL = getFacebookPageUrl();
-            Intent facebookIntent = new Intent(Intent.ACTION_VIEW);
-            facebookIntent.setData(Uri.parse(facebookURL));
-            startActivity(facebookIntent);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    private String getFacebookPageUrl() {
-        final String facebookUrl = settings.getFacebookAddress();
-        String fbURL = null;
-        PackageManager packageManager = getPackageManager();
-        try {
-            if (packageManager != null){
-                Intent fbIntent = packageManager.getLaunchIntentForPackage("com.facebook.katana");
-                if (fbIntent != null){
-                    int versionCode = packageManager.getPackageInfo("com.facebook.katana",0).versionCode;
-                    if (versionCode >= 3002850){
-                        fbURL = "fb://page/1993598950880589";
-                    }
-                } else {
-                    fbURL = facebookUrl;
-                }
-            }
-            else {
-                fbURL = facebookUrl;
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            fbURL = facebookUrl;
-        }
-        return fbURL;
-    }
-
-    private void openTwitterProfile(){
-        Intent intent = null;
-        try {
-            this.getPackageManager().getPackageInfo("com.twitter.android", 0);
-            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("twitter://user?user_id=USERID"));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        } catch (Exception e){
-            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://twitter.com/profilename"));
-        }
-        this.startActivity(intent);
-    }
-
 
     @Override
     public void onBackPressed() {
@@ -153,93 +116,36 @@ public class HomeActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.home, menu);
-        return true;
+    @OnClick(R.id.playPauseBtn)
+    public void onClicked(){
+
+        if(TextUtils.isEmpty(streamURL)) return;
+
+        radioManager.playOrPause(streamURL);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
+    @Subscribe
+    public void onEvent(String status){
 
-            case R.id.watch_webcam: {
-                launchWebcam();
+        switch (status){
+
+            case AppCons.LOADING:
+
+                // loading
+
                 break;
-            }
 
-            case R.id.playstore_share: {
-                /*
-                Uri uri = Uri.parse("market://details?id=" + context.getPackageName());
-                Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
-                // To count with Play market backstack, After pressing back button,
-                // to taken back to our application, we need to add following flags to intent.
-                goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
-                        Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
-                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-                try {
-                    startActivity(goToMarket);
-                } catch (ActivityNotFoundException e) {
-                    startActivity(new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("http://play.google.com/store/apps/details?id=" + context.getPackageName())));
-                }
+            case AppCons.ERROR:
+
+                Toast.makeText(this, R.string.no_stream, Toast.LENGTH_SHORT).show();
+
                 break;
-                */
-            }
 
         }
 
-        return super.onOptionsItemSelected(item);
-    }
-
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-         if (id == R.id.nav_share) {
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("text/plain");
-             String shareMessage= "\nPlease download our Radiomunnabuddu USA app from the Play Store\n\n";
-             shareMessage = shareMessage + "https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID +"\n\n";
-            shareIntent.putExtra(Intent.EXTRA_TEXT  , shareMessage);
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio MB FM");
-            startActivity(Intent.createChooser(shareIntent, "Share via..."));
-
-        }
-        else if (id == R.id.nav_email){
-            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-            emailIntent.setData(Uri.parse("mailto: "+settings.getEmailAddress()));
-            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio MB FM");
-            if (emailIntent.resolveActivity(getPackageManager()) != null){
-                startActivity(Intent.createChooser(emailIntent, "Send email via"));
-            }
-        }
-        else if(id == R.id.nav_report){
-            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-            emailIntent.setData(Uri.parse("mailto: denis@premar.tech"));
-            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Crash or Bug report");
-             if (emailIntent.resolveActivity(getPackageManager()) != null){
-                 startActivity(Intent.createChooser(emailIntent, "Send email via."));
-             }
-         }
-        else if(id == R.id.nav_about){
-            Intent aboutIntent = new Intent(HomeActivity.this, AboutActivity.class);
-            startActivity(aboutIntent);
-        }
-        else if(id == R.id.nav_fb){
-            openFacebookProfile();
-        }
-        else if(id == R.id.nav_twitter){
-          openTwitterProfile();
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
+        playPauseBtn.setBackgroundResource(status.equals(AppCons.PLAYING)
+                ? R.drawable.ic_pause
+                : R.drawable.ic_play);
 
     }
 
@@ -248,31 +154,10 @@ public class HomeActivity extends AppCompatActivity
      * Listens for contact button clicks
      */
     private void clickListeners(){
-        //Play button
-        playButton = findViewById(R.id.PlayButton);
-        playButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getApplicationContext(),
-                    RadioMediaPlayerService.class);
-            intent.putExtra(RadioMediaPlayerService.START_PLAY, true);
-            startService(intent);
-
-        });
-
-        //Stop button
-        stopButton = findViewById(R.id.StopButton);
-        stopButton.setOnClickListener(v -> {
-            //Get new MediaPlayerService activity
-            Intent intent = new Intent(getApplicationContext(),
-                    RadioMediaPlayerService.class);
-            stopService(intent);
-        });
-
-        //Email Button click list
-
         EmailPress.setOnClickListener(view -> {
 
             Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-            emailIntent.setData(Uri.parse("mailto: "+settings.getEmailAddress()));
+            emailIntent.setData(Uri.parse("mailto: "+AppCons.emailAddress));
             emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio MB FM");
             if (emailIntent.resolveActivity(getPackageManager()) != null){
                 try {
@@ -286,7 +171,7 @@ public class HomeActivity extends AppCompatActivity
         //Website Button
         WWWPress.setOnClickListener(view -> {
 
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(settings.getWebsiteURL())); //URL
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(AppCons.websiteURL)); //URL
             startActivity (browserIntent);
 
         });
@@ -305,7 +190,7 @@ public class HomeActivity extends AppCompatActivity
      * Launches webcam from external URL
      */
     public void launchWebcam(){
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(settings.getRadioWebcamURL()));
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(AppCons.radioWebcamURL));
         startActivity (browserIntent);
     }
 
@@ -333,7 +218,7 @@ public class HomeActivity extends AppCompatActivity
                 {
                     Intent sendIntent = new Intent(Intent.ACTION_VIEW);
 //                    sendIntent.setData(Uri.parse("sms_to:"+ settings.getSmsNumber()));
-                    sendIntent.setDataAndType(Uri.parse("sms_to:"+ settings.getSmsNumber()),
+                    sendIntent.setDataAndType(Uri.parse("sms_to:"+ AppCons.smsNumber),
                             "vnd.android-dir/mms-sms");
                     sendIntent.putExtra("sms_body", "Hello Presenter");
                     this.startActivity(sendIntent);
@@ -344,7 +229,7 @@ public class HomeActivity extends AppCompatActivity
 
     public void onCall() {
         if (checkAndRequestPermissions()) {
-            startActivity(new Intent(Intent.ACTION_CALL).setData(Uri.parse("tel:" + settings.getPhoneNumber())));
+            startActivity(new Intent(Intent.ACTION_CALL).setData(Uri.parse("tel:" + AppCons.phoneNumber)));
         }
     }
 
@@ -440,5 +325,159 @@ public class HomeActivity extends AppCompatActivity
                 })
                 .setNegativeButton("Cancel", (paramDialogInterface, paramInt) -> finish());
         dialog.show();
+    }
+
+    @Override
+    public void onStart() {
+
+        super.onStart();
+
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+
+        EventBus.getDefault().unregister(this);
+
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        radioManager.unbind();
+
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        radioManager.bind();
+    }
+
+    private void openFacebookProfile() {
+        try {
+            String facebookURL = getFacebookPageUrl();
+            Intent facebookIntent = new Intent(Intent.ACTION_VIEW);
+            facebookIntent.setData(Uri.parse(facebookURL));
+            startActivity(facebookIntent);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private String getFacebookPageUrl() {
+        final String facebookUrl = AppCons.facebookAddress;
+        String fbURL = null;
+        PackageManager packageManager = getPackageManager();
+        try {
+            if (packageManager != null){
+                Intent fbIntent = packageManager.getLaunchIntentForPackage("com.facebook.katana");
+                if (fbIntent != null){
+                    int versionCode = packageManager.getPackageInfo("com.facebook.katana",0).versionCode;
+                    if (versionCode >= 3002850){
+                        fbURL = "fb://page/1993598950880589";
+                    }
+                } else {
+                    fbURL = facebookUrl;
+                }
+            }
+            else {
+                fbURL = facebookUrl;
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            fbURL = facebookUrl;
+        }
+        return fbURL;
+    }
+
+    private void openTwitterProfile(){
+        Intent intent = null;
+        try {
+            this.getPackageManager().getPackageInfo("com.twitter.android", 0);
+            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("twitter://user?user_id=USERID"));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        } catch (Exception e){
+            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://twitter.com/profilename"));
+        }
+        this.startActivity(intent);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.home, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+
+            case R.id.watch_webcam: {
+                launchWebcam();
+                break;
+            }
+
+            case R.id.playstore_share: {
+            }
+
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_share) {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            String shareMessage= "\nPlease download our Radiomunnabuddu USA app from the Play Store\n\n";
+            shareMessage = shareMessage + "https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID +"\n\n";
+            shareIntent.putExtra(Intent.EXTRA_TEXT  , shareMessage);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio MB FM");
+            startActivity(Intent.createChooser(shareIntent, "Share via..."));
+
+        }
+        else if (id == R.id.nav_email){
+            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+            emailIntent.setData(Uri.parse("mailto: "+ AppCons.emailAddress));
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio MB FM");
+            if (emailIntent.resolveActivity(getPackageManager()) != null){
+                startActivity(Intent.createChooser(emailIntent, "Send email via"));
+            }
+        }
+        else if(id == R.id.nav_report){
+            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+            emailIntent.setData(Uri.parse("mailto: denis@premar.tech"));
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Crash or Bug report");
+            if (emailIntent.resolveActivity(getPackageManager()) != null){
+                startActivity(Intent.createChooser(emailIntent, "Send email via."));
+            }
+        }
+        else if(id == R.id.nav_about){
+            Intent aboutIntent = new Intent(HomeActivity.this, AboutActivity.class);
+            startActivity(aboutIntent);
+        }
+        else if(id == R.id.nav_fb){
+            openFacebookProfile();
+        }
+        else if(id == R.id.nav_twitter){
+            openTwitterProfile();
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+
     }
 }
