@@ -85,7 +85,6 @@ public class RadioMediaPlayerService extends Service implements
             if (!isPlaying) {
                 isPlaying = true;
 
-
                 //create the notification channel for the app
                 createWorkerNotificationChannel(notificationManager);
 
@@ -125,7 +124,9 @@ public class RadioMediaPlayerService extends Service implements
                     radioPlayer.start(); //Start radio stream
                 });
 
-                startForeground(classID, notification);
+                if (notification != null) {
+                    startForeground(classID, notification);
+                }
 
                 //Display toast notification
                 Toast.makeText(getApplicationContext(), settings.getPlayNotificationMessage(),

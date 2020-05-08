@@ -82,7 +82,7 @@ public class HomeActivity extends AppCompatActivity
 
         clickListeners(); //Start click listeners
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -206,14 +206,14 @@ public class HomeActivity extends AppCompatActivity
              String shareMessage= "\nPlease download our Radiomunnabuddu USA app from the Play Store\n\n";
              shareMessage = shareMessage + "https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID +"\n\n";
             shareIntent.putExtra(Intent.EXTRA_TEXT  , shareMessage);
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio Munnabuddu USA");
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio MB FM");
             startActivity(Intent.createChooser(shareIntent, "Share via..."));
 
         }
         else if (id == R.id.nav_email){
             Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
             emailIntent.setData(Uri.parse("mailto: "+settings.getEmailAddress()));
-            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio Munnabuddu USA");
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Radio MB FM");
             if (emailIntent.resolveActivity(getPackageManager()) != null){
                 startActivity(Intent.createChooser(emailIntent, "Send email via"));
             }
@@ -313,11 +313,6 @@ public class HomeActivity extends AppCompatActivity
     public void sendSms() {
         if (checkAndRequestPermissions()) {
             if (AppUtils.getDefaultSmsAppPackageName(this) != null) {
-//                Uri uri = Uri.parse("sms_to: " + settings.getSmsNumber());
-//                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-//                intent.setDataAndType(uri,"vnd.android-dir/mms-sms");
-//                intent.putExtra("sms_body", "Hello Presenter,");
-//                this.startActivity(intent);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) //At least KitKat
                 {
