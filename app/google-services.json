@@ -1,42 +1,42 @@
 {
   "project_info": {
-    "project_number": "392111836447",
-    "firebase_url": "https://radiomunabuddu.firebaseio.com",
-    "project_id": "radiomunabuddu",
-    "storage_bucket": "radiomunabuddu.appspot.com"
+    "project_number": "182741690617",
+    "firebase_url": "https://radio-mb-fm.firebaseio.com",
+    "project_id": "radio-mb-fm",
+    "storage_bucket": "radio-mb-fm.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:392111836447:android:0596cb81a015caeea1342a",
+        "mobilesdk_app_id": "1:182741690617:android:540d4703e6a5df97f25a28",
         "android_client_info": {
-          "package_name": "com.premar.radiomunabuddu"
+          "package_name": "com.dennytech.radiomunabuddu"
         }
       },
       "oauth_client": [
         {
-          "client_id": "392111836447-1fes5jbaa7l7abgdprhr5uujv44655bt.apps.googleusercontent.com",
+          "client_id": "182741690617-drhd9lmsfpk6b2jn45uiitgt7j7f1v2f.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.premar.radiomunabuddu",
+            "package_name": "com.dennytech.radiomunabuddu",
             "certificate_hash": "05108368d28ee56cd45242e04e2e60a511653323"
           }
         },
         {
-          "client_id": "392111836447-34jvf72j3362jn8t5fbveqg2mvu7mqqb.apps.googleusercontent.com",
+          "client_id": "182741690617-ffb8pjcifdkko0l0cnibnraodn2v8hlc.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDH3OM8q8Hieeg1OYCyCqswMlrTJLfZSzs"
+          "current_key": "AIzaSyDTjSpi6lTVAP3XqGBKVq9O3DtohvRVGM0"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "392111836447-34jvf72j3362jn8t5fbveqg2mvu7mqqb.apps.googleusercontent.com",
+              "client_id": "182741690617-ffb8pjcifdkko0l0cnibnraodn2v8hlc.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
